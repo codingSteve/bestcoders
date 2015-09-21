@@ -8,10 +8,10 @@ class TestFilters extends FlatSpec with Matchers {
     val l:List[Int] = List(1,2,3,4,5,0,-1,-2,-3,-4,-5,-6)
     val limit:Int   = 3
 
-    val expected    = l.filter(x => x < limit)
+    val expected    = List(1,2,0,-1,-2,-3,-4,-5,-6)
     val result      = f.capListAt(l,limit)
 
-    val expectedMax = l.max
+    val expectedMax = 2
     val actualMax   = result.max
 
     actualMax should be (expectedMax)
