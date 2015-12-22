@@ -1,0 +1,1 @@
+java -XX:+UseConcMarkSweepGC -verbose:gc -Xloggc:a.out -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintTenuringDistribution -XX:+PrintGCApplicationConcurrentTime -XX:+PrintGCApplicationStoppedTime -cp .  bestcoders.gc.World
