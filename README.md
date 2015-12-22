@@ -1,9 +1,8 @@
 
 
-Example code from leet code
-===========================
+Example code and comments
+=========================
 
-[problems]: https://leetcode.com/problemset/algorithms/
 
 
 [bc]: https://en.wikipedia.org/wiki/Java_bytecode_instruction_listings
