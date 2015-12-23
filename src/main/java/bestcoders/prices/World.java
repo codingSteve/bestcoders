@@ -1,4 +1,4 @@
-package bestcoders.gc;
+package bestcoders.prices;
 
 
 
