@@ -11,6 +11,7 @@ public class Loops {
 
   /**
    * Saving one bytecode by comparing to zero.
+   * If you don't mind going backwards
    *
    * See: https://en.wikipedia.org/wiki/Java_bytecode_instruction_listings
    * See: http://cory.li/bytecode-hacking/

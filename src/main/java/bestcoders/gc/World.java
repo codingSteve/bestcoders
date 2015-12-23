@@ -11,8 +11,16 @@ public class World {
 
 
 
+
     final int bufferSize = 600;
     final int tickers    = 600;
+
+
+    final ArrayList<Integer> a = new ArrayList<Integer>(600);
+    a.set(0,1);
+    a.set(1,1);
+    System.out.println(a.size());
+    System.exit(0);
 
     generateTicks(bufferSize, tickers);
 
