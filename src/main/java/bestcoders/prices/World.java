@@ -8,19 +8,8 @@ import java.util.*;
 public class World {
 
   public static void main(final String[] ARGV) {
-
-
-
-
     final int bufferSize = 600;
     final int tickers    = 600;
-
-
-    final ArrayList<Integer> a = new ArrayList<Integer>(600);
-    a.set(0,1);
-    a.set(1,1);
-    System.out.println(a.size());
-    System.exit(0);
 
     generateTicks(bufferSize, tickers);
 
@@ -49,21 +38,25 @@ public class World {
     for (int i=0 ; i < universe.size();i++) {
       final List<Double> tickerPrices = prices.get(i);
       final Ticker t = universe.get(i);
-      spinPrices(t, tickerPrices);
+      spinPrices(t, tickerPrices, universe);
 
     }
 
   }
 
-  static void spinPrices(final Ticker t, final List<Double> prices){
+  static void spinPrices(final Ticker t, final List<Double> prices, final Object synchOn){
     Thread th = new Thread() { 
       public void run() { 
         for (int i =0 ; ++i < 1000000; ) { 
           if (i < 600) {
-            prices.add(t.newPrice());
+            synchronized(synchOn){
+              prices.add(t.newPrice());
+            }
           }
           else {
-            prices.set((i % prices.size()), t.newPrice());
+            synchronized(synchOn){
+              prices.set((i % prices.size()), t.newPrice());
+            }
           }
         }
       }
