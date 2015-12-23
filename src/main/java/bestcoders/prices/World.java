@@ -31,7 +31,7 @@ public class World {
       
       final Ticker t = universe.get(i);
       
-      for(int i= bufferSize; --i >= 0;){
+      for(int j= bufferSize; --j >= 0;){
         l.set(j, new Price(t));
       }
     }
