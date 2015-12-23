@@ -21,22 +21,24 @@ public class World {
 
     final List<Ticker>       allTickers = loadTickers();
     final List<Ticker>       universe   = allTickers.subList(0,tickers);
-    final List<List<Double>> prices     = new ArrayList<List<Double>>();
+    final List<List<Price>> prices     = new ArrayList<List<Price>>();
 
-    System.out.println(bufferSize);
-    System.out.println(tickers);
-
-    System.out.println(allTickers.size());
-    System.out.println(universe.size());
-    System.out.println(prices.size());
+   
 
     for(int i=0; i < tickers;i++) {
-      prices.add(new ArrayList<Double>());
+      final List<Price> l = new ArrayList<Price>();
+      prices.add(l);
+      
+      final Ticker t = universe.get(i);
+      
+      for(int i= bufferSize; --i >= 0;){
+        l.set(j, new Price(t));
+      }
     }
 
 
     for (int i=0 ; i < universe.size();i++) {
-      final List<Double> tickerPrices = prices.get(i);
+      final List<Price> tickerPrices = prices.get(i);
       final Ticker t = universe.get(i);
       spinPrices(t, tickerPrices, universe);
 
@@ -45,19 +47,19 @@ public class World {
   }
 
   static void spinPrices(final Ticker t, final List<Double> prices, final Object synchOn){
+  
+    final int s = prices.size();
+    
     Thread th = new Thread() { 
       public void run() { 
-        for (int i =0 ; ++i < 1000000; ) { 
-          if (i < 600) {
-            synchronized(synchOn){
-              prices.add(t.newPrice());
+        for (int i =1000000 ; --i >=0; ) { 
+          
+           Price p = prices.get(i % s);
+           
+            synchronized(p){
+              p.setPrice(t.newPrice());
             }
-          }
-          else {
-            synchronized(synchOn){
-              prices.set((i % prices.size()), t.newPrice());
-            }
-          }
+          
         }
       }
     };
