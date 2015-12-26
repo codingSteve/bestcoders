@@ -2,10 +2,12 @@ package bestcoders.prices;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
+
 
 public class World {
   private static final int bufferSize = (int) Math.pow(2,10);
-  private static final int tickers    = 600;
+  private static final int tickers    = 100;
 
   private static final List<Ticker>      allTickers = loadTickers();
   private static final List<Ticker>      universe   = allTickers.subList(0,tickers);
@@ -18,38 +20,48 @@ public class World {
 
 
   }
+  
+  static void nap(final long n) {
+    try{ Thread.sleep(n);} catch (Exception e) {}
+  }
 
   private static void readTicks(final int bufferSize, final int tickers){
-    for (int i = tickers; --i >= 0;){
-      final Ticker t = getTicker(i);
-      final List<Price> prices = getRecentPrices(i);
+    for (;;) {
+      for (int i = tickers; --i >= 0;){
+        final Ticker t = getTicker(i);
+        final List<Price> prices = getRecentPrices(i);
 
-      double runningTotal = 0.0d;
-      for(int j = bufferSize; --j >= 0;) {
-        final Price p = prices.get(j);
-        synchronized(p) { 
-          runningTotal += p.getPrice();
+        double runningTotal = 0.0d;
+        for(int j = bufferSize; --j >= 0;) {
+          final Price p = prices.get(j);
+          synchronized(p) { 
+            runningTotal += p.getPrice();
+          }
+  
+  
         }
+        System.out.println(t.ticker + " - " + t.referencePrice +  " - "  + runningTotal/bufferSize);
+
 
       }
-      System.out.println(t.ticker + " - "  + runningTotal/tickers);
-
-
+      nap(1000);
     }
   }
 
 
-  private static List<Price> getRecentPrices(final int i) { 
+  static List<Price> getRecentPrices(final int i) { 
     return prices.get(i);
   }
 
-  private static Ticker getTicker(final int i){
+  static Ticker getTicker(final int i){
       return universe.get(i);
   }
 
-  private static List<Ticker> generateTicks(final int bufferSize, final int tickers){
+  static List<Ticker> generateTicks(final int bufferSize, final int tickers){
 
-    for(int i=0; i < tickers;i++) {
+    final ExecutorService pool = Executors.newFixedThreadPool(800);
+
+    for(int i=tickers; --i >=0 ;) {
       final List<Price> l = new ArrayList<Price>();
       prices.add(l);
       
@@ -60,35 +72,44 @@ public class World {
       }
     }
 
+    final long generationStart = new java.util.Date().getTime();
 
-    for (int i=0 ; i < universe.size();i++) {
-      final List<Price> tickerPrices = prices.get(i);
-      final Ticker t = universe.get(i);
-      spinPrices(t, tickerPrices, universe);
+      for (int i=0 ; i < universe.size();i++) {
+        final List<Price> tickerPrices = prices.get(i);
+        final Ticker t = universe.get(i);
+        spinPrice(t, tickerPrices, pool);
+      }
 
-    }
+    System.out.println("tick generation complete in " + (new java.util.Date().getTime() - generationStart) + "ms");
 
     return universe;
   }
 
-  static void spinPrices(final Ticker t, final List<Price> prices, final Object synchOn){
+  static void spinPrice(final Ticker t, final List<Price> prices, final ExecutorService pool){
   
     final int mask = prices.size() -1 ;
     
-    Thread th = new Thread() { 
+    Runnable r = new Runnable() { 
       public void run() { 
         for (int i =1000000 ; --i >=0; ) { 
-          
-           Price p = prices.get(i & mask);
-           
-            synchronized(p){
-              p.setPrice(t.newPrice());
-            }
-          
+          if(i % 1000 == 0 ) nap(1);
+          setPrice(t, i, prices, mask);
         }
       }
     };
-    th.start();
+
+    pool.execute(r);
+
+  }
+
+  static void setPrice(final Ticker t, 
+                       final int position, 
+                       final List<Price> prices, 
+                       final int mask) { 
+    Price p = prices.get(position & mask);
+    synchronized(p){
+      p.setPrice(t.newPrice());
+    }
   }
 
   private static List<Ticker> loadTickers() { 
