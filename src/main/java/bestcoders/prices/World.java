@@ -1,29 +1,53 @@
 package bestcoders.prices;
 
-
-
 import java.io.*;
 import java.util.*;
 
 public class World {
+  private static final int bufferSize = (int) Math.pow(2,10);
+  private static final int tickers    = 600;
+
+  private static final List<Ticker>      allTickers = loadTickers();
+  private static final List<Ticker>      universe   = allTickers.subList(0,tickers);
+  private static final List<List<Price>> prices     = new ArrayList<List<Price>>();
 
   public static void main(final String[] ARGV) {
-    final int bufferSize = 600;
-    final int tickers    = 600;
 
     generateTicks(bufferSize, tickers);
+    readTicks(bufferSize, tickers);
 
 
   }
 
+  private static void readTicks(final int bufferSize, final int tickers){
+    for (int i = tickers; --i >= 0;){
+      final Ticker t = getTicker(i);
+      final List<Price> prices = getRecentPrices(i);
 
-  private static void generateTicks(final int bufferSize, final int tickers){
+      double runningTotal = 0.0d;
+      for(int j = bufferSize; --j >= 0;) {
+        final Price p = prices.get(j);
+        synchronized(p) { 
+          runningTotal += p.getPrice();
+        }
 
-    final List<Ticker>       allTickers = loadTickers();
-    final List<Ticker>       universe   = allTickers.subList(0,tickers);
-    final List<List<Price>> prices     = new ArrayList<List<Price>>();
+      }
+      System.out.println(t.ticker + " - "  + runningTotal/tickers);
 
-   
+
+    }
+  }
+
+
+  private static List<Price> getRecentPrices(final int i) { 
+    return prices.get(i);
+  }
+
+  private static Ticker getTicker(final int i){
+      return universe.get(i);
+  }
+
+  private static List<Ticker> generateTicks(final int bufferSize, final int tickers){
 
     for(int i=0; i < tickers;i++) {
       final List<Price> l = new ArrayList<Price>();
@@ -32,7 +56,7 @@ public class World {
       final Ticker t = universe.get(i);
       
       for(int j= bufferSize; --j >= 0;){
-        l.set(j, new Price(t));
+        l.add(new Price(t));
       }
     }
 
@@ -44,17 +68,18 @@ public class World {
 
     }
 
+    return universe;
   }
 
-  static void spinPrices(final Ticker t, final List<Double> prices, final Object synchOn){
+  static void spinPrices(final Ticker t, final List<Price> prices, final Object synchOn){
   
-    final int s = prices.size();
+    final int mask = prices.size() -1 ;
     
     Thread th = new Thread() { 
       public void run() { 
         for (int i =1000000 ; --i >=0; ) { 
           
-           Price p = prices.get(i % s);
+           Price p = prices.get(i & mask);
            
             synchronized(p){
               p.setPrice(t.newPrice());
@@ -63,7 +88,7 @@ public class World {
         }
       }
     };
-      th.start();
+    th.start();
   }
 
   private static List<Ticker> loadTickers() { 
