@@ -92,7 +92,7 @@ public class World {
     Runnable r = new Runnable() { 
       public void run() { 
         for (int i =1000000 ; --i >=0; ) { 
-          if(i % 1000 == 0 ) nap(1);
+          if(i & mask == 0 ) nap(1);
           setPrice(t, i, prices, mask);
         }
       }
