@@ -92,8 +92,9 @@ public class World {
     Runnable r = new Runnable() { 
       public void run() { 
         for (int i =1000000 ; --i >=0; ) { 
-          if(i & mask == 0 ) nap(1);
-          setPrice(t, i, prices, mask);
+          final int index = i & mask;
+          if(index == 0 ) nap(1);
+          setPrice(t, index, prices);
         }
       }
     };
@@ -104,9 +105,8 @@ public class World {
 
   static void setPrice(final Ticker t, 
                        final int position, 
-                       final List<Price> prices, 
-                       final int mask) { 
-    Price p = prices.get(position & mask);
+                       final List<Price> prices) { 
+    Price p = prices.get(position);
     synchronized(p){
       p.setPrice(t.newPrice());
     }
