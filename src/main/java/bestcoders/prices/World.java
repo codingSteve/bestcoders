@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 
 
 public class World {
-  private static final int bufferSize = (int) Math.pow(2,10);
+  private static final int bufferSize = 1 << 10;
   private static final int tickers    = 100;
 
   private static final List<Ticker>      allTickers = loadTickers();
