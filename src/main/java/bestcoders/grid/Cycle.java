@@ -21,10 +21,15 @@ public class Cycle{
     final int[][] freeSpaces = look();
     int[] newTarget = new int[]{-1,-1};
 
-    while (newTarget[0] == -1) {
+    int tries = 100;
+    while (newTarget[0] == -1 && --tries >0 ) {
       final int direction = rand.nextInt(4);
       newTarget = freeSpaces[direction];
-      System.out.println(player + ": newTarget == ( " + newTarget[0] + "," + newTarget[1] + ")");
+    }
+    System.out.println(player + ": newTarget == ( " + newTarget[0] + "," + newTarget[1] + ")");
+
+    if (tries == 0 ) {
+      throw new RuntimeException(player + ": blocked");
     }
 
     this.col = newTarget[0];

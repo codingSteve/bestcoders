@@ -2,6 +2,7 @@ package bestcoders.grid;
 
 
 import java.util.*;
+import java.util.concurrent.*;
 
 
 public class World{
@@ -23,14 +24,23 @@ public class World{
       players.add(new Cycle(grid, col, row, i+1));
     }
 
-    for(int turn = 10 ; --turn >= 0 ; ) { 
+    final ExecutorService es = Executors.newFixedThreadPool(numberOfPlayers);
+
+    for(int turn = 1000 ; --turn >= 0 ; ) { 
       for(final Cycle c : players) { 
-        c.move();
+        es.submit(new Runnable(){
+          public void run(){
+            c.move();
+          }
+
+        });
       }
-    
-      showGrid();
-    
     }
+    es.shutdown();
+
+    while(!es.isTerminated()){ try{Thread.sleep(100);}catch(Exception e){}}
+
+    showGrid();
 
   }
 
@@ -42,7 +52,12 @@ public class World{
 
     for (int c = 0 ; c < 32 ; c++){
       for (int r = 0 ; r < 32 ; r++){
-        System.out.print(grid[c][r]);
+        if(grid[c][r] == 0) {
+          System.out.print(' ');
+        }
+        else {
+          System.out.print(grid[c][r]);
+        }
       }
       System.out.println("|");
     }
