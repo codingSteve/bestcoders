@@ -34,6 +34,14 @@ public class World{
       System.out.println("synchronization block enabled == " + locks);
     }
 
+    final boolean quiet;
+    if(ARGV.length < 3) { 
+      quiet = true;
+    }
+    else {
+      quiet  = ("QUIET".equals(ARGV[2]));
+    }
+
     final Random rand = new java.util.Random();
     final int numberOfPlayers = Integer.valueOf(ARGV[0]).intValue();
 
@@ -44,7 +52,7 @@ public class World{
       players.add(new Cycle(grid, col, row, i+1, locks));
     }
 
-    final ExecutorService es = Executors.newFixedThreadPool(numberOfPlayers);
+    final ExecutorService es = Executors.newFixedThreadPool(6);
     final CyclicBarrier    b = new CyclicBarrier(numberOfPlayers);
 
     for(int turn = 1000 ; --turn >= 0 ; ) { 
@@ -52,10 +60,13 @@ public class World{
         es.submit(new Runnable(){
           public void run(){
             try{c.move() ;} catch (Exception e) {}
-            try{b.await();} catch (Exception e) {}
+            //try{b.await();} catch (Exception e) {}
           }
 
         });
+      }
+
+      if(!quiet) {
         for(int i = 44 ; --i >=0 ; ) System.out.print('');
         showGrid();
         try{Thread.sleep(500);}catch(Exception e){}
