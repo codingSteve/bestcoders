@@ -7,33 +7,58 @@ import java.util.concurrent.*;
 
 public class World{
 
-  final static int[][] grid = new int[32][32];
+  final static int     COLS =  64;
+  final static int     ROWS =  32;
+
+  final static char[][] grid = new char[COLS][ROWS];
 
   public static void main(final String[] ARGV) { 
+    for (int i = 0 ; i < ARGV.length ; i++) {
+      System.out.print(ARGV[i] + " ");
+    }
+    System.out.println();
+
     if(ARGV.length < 1) { 
       System.err.println("Expecting the number of players");
       System.exit(-1);
     }
+
+    final boolean locks ;
+    if (ARGV.length < 2) { 
+      locks = true;
+    }
+    else {
+      final String lockArg = ARGV[1];
+      System.out.println("About to check \"" + lockArg +"\"  == \"LOCKS\"");
+      locks = ("LOCKS".equals(lockArg));
+      System.out.println("synchronization block enabled == " + locks);
+    }
+
     final Random rand = new java.util.Random();
     final int numberOfPlayers = Integer.valueOf(ARGV[0]).intValue();
 
     final List<Cycle> players = new ArrayList<Cycle>(numberOfPlayers);
     for( int i = 0 ; i < numberOfPlayers; i++){
-      final int col = rand.nextInt(32);
-      final int row = rand.nextInt(32);
-      players.add(new Cycle(grid, col, row, i+1));
+      final int col = rand.nextInt(COLS);
+      final int row = rand.nextInt(ROWS);
+      players.add(new Cycle(grid, col, row, i+1, locks));
     }
 
     final ExecutorService es = Executors.newFixedThreadPool(numberOfPlayers);
+    final CyclicBarrier    b = new CyclicBarrier(numberOfPlayers);
 
     for(int turn = 1000 ; --turn >= 0 ; ) { 
       for(final Cycle c : players) { 
         es.submit(new Runnable(){
           public void run(){
-            c.move();
+            try{c.move() ;} catch (Exception e) {}
+            try{b.await();} catch (Exception e) {}
           }
 
         });
+        for(int i = 44 ; --i >=0 ; ) System.out.print('');
+        showGrid();
+        try{Thread.sleep(500);}catch(Exception e){}
       }
     }
     es.shutdown();
@@ -45,14 +70,14 @@ public class World{
   }
 
   private static void showGrid(){
-    for (int r = 0 ; r < 32 ; r++){
+    for (int c = 0 ; c < COLS ; c++){
       System.out.print('-');
     }
     System.out.println("|");
 
-    for (int c = 0 ; c < 32 ; c++){
-      for (int r = 0 ; r < 32 ; r++){
-        if(grid[c][r] == 0) {
+    for (int r = 0 ; r < ROWS ; r++){
+      for (int c = 0 ; c < COLS ; c++){
+        if(grid[c][r] == '\0') {
           System.out.print(' ');
         }
         else {
@@ -61,7 +86,7 @@ public class World{
       }
       System.out.println("|");
     }
-    for (int r = 0 ; r < 32 ; r++){
+    for (int c = 0 ; c < COLS ; c++){
       System.out.print('-');
     }
     System.out.println("|");
