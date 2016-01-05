@@ -3,20 +3,34 @@ package bestcoders.prices;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 
 
 public class World {
   private static final int bufferSize = 1 << 10;
-  private static final int tickers    = 100;
+  private static final int tickers    = 1000;
 
   private static final List<Ticker>      allTickers = loadTickers();
   private static final List<Ticker>      universe   = allTickers.subList(0,tickers);
   private static final List<List<Price>> prices     = new ArrayList<List<Price>>();
 
+  //effectively locking the entire table
+  //lock striping needed
+  private static final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+  private static final Lock readLock  = readWriteLock.readLock();
+  private static final Lock writeLock = readWriteLock.writeLock();
+
+  private static final ExecutorService pool = Executors.newFixedThreadPool(8);
+
   public static void main(final String[] ARGV) {
 
     generateTicks(bufferSize, tickers);
     readTicks(bufferSize, tickers);
+
+    while(!pool.isTerminated()) {
+      nap(1000);
+      System.out.println("pool still working");
+    }
 
 
   }
@@ -34,9 +48,11 @@ public class World {
         double runningTotal = 0.0d;
         for(int j = bufferSize; --j >= 0;) {
           final Price p = prices.get(j);
-          synchronized(p) { 
+          readLock.lock();
+          //synchronized(p) { 
             runningTotal += p.getPrice();
-          }
+          //}
+          readLock.unlock();
   
   
         }
@@ -59,7 +75,6 @@ public class World {
 
   static List<Ticker> generateTicks(final int bufferSize, final int tickers){
 
-    final ExecutorService pool = Executors.newFixedThreadPool(800);
 
     for(int i=tickers; --i >=0 ;) {
       final List<Price> l = new ArrayList<Price>();
@@ -68,7 +83,9 @@ public class World {
       final Ticker t = universe.get(i);
       
       for(int j= bufferSize; --j >= 0;){
+        writeLock.lock();
         l.add(new Price(t));
+        writeLock.unlock();
       }
     }
 
@@ -107,9 +124,11 @@ public class World {
                        final int position, 
                        final List<Price> prices) { 
     Price p = prices.get(position);
-    synchronized(p){
+    writeLock.lock();
+    //synchronized(p){
       p.setPrice(t.newPrice());
-    }
+    //}
+    writeLock.unlock();
   }
 
   private static List<Ticker> loadTickers() { 
