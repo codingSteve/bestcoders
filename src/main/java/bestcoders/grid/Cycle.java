@@ -1,4 +1,3 @@
-
 package bestcoders.grid;
 
 public class Cycle{
