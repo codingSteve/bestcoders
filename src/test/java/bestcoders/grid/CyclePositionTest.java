@@ -1,9 +1,7 @@
-
 package bestcoders.grid;
 
 import org.junit.*;
 import static org.junit.Assert.*;
-
 
 public class CyclePositionTest {
   final static char EMPTY = '\0';
@@ -17,7 +15,7 @@ public class CyclePositionTest {
     };
 
     final int playerNumber = 1;
-    final Cycle player = new Cycle(grid, 0,0, playerNumber, true);
+    final bestcoders.grid.Cycle player = new bestcoders.grid.Cycle(grid, 0,0, playerNumber, true);
 
     player.move();
 
